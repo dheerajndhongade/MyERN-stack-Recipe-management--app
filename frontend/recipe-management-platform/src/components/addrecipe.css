@@ -1,0 +1,23 @@
+.add-recipe-container {
+  max-width: 800px; /* Increase the form width */
+  margin: 0 auto; /* Center the form horizontally */
+  padding: 20px;
+  background-color: #fff; /* Background color for the form */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Optional: Add shadow for depth */
+  border-radius: 8px; /* Rounded corners for a polished look */
+}
+
+.add-recipe-form .ant-form-item {
+  margin-bottom: 16px; /* Space between form items */
+}
+
+.add-recipe-container h2 {
+  text-align: center; /* Center the heading */
+  margin-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+  .add-recipe-container {
+    max-width: 95%; /* Adjust for smaller screens */
+  }
+}

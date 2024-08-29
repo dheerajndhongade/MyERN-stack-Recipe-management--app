@@ -1,0 +1,24 @@
+/* Ensure the header is styled correctly */
+.ant-layout-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+  background: #fff; /* White background for the header */
+  display: flex;
+  align-items: center;
+}
+
+/* Adjust margin to accommodate the header height */
+.ant-menu-horizontal {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+/* Style the search input and button within the navbar */
+.ant-menu-item .ant-input {
+  margin-right: 8px;
+  border-radius: 4px;
+}
