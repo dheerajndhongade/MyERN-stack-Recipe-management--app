@@ -99,20 +99,27 @@ const RecipesPage = () => {
     }
   };
 
-  const fetchFollowStatus = async (userId) => {
-    try {
-      const response = await fetchWithAuth(
-        `http://localhost:5000/users/${userId}/follow-status`
-      );
-      if (!response.ok) {
-        throw new Error("Failed to fetch follow status");
+  useEffect(() => {
+    // Fetch follow status when component mounts or selectedRecipe changes
+    const fetchFollowStatus = async () => {
+      try {
+        const response = await fetchWithAuth(
+          `http://localhost:5000/users/${selectedRecipe.userId}/follow-status`
+        );
+        if (!response.ok) {
+          throw new Error("Failed to fetch follow status");
+        }
+        const data = await response.json();
+        setIsFollowing(data.isFollowing);
+      } catch (error) {
+        message.error(error.message);
       }
-      const data = await response.json();
-      setIsFollowing(data.isFollowing);
-    } catch (error) {
-      message.error(error.message);
+    };
+
+    if (selectedRecipe) {
+      fetchFollowStatus();
     }
-  };
+  }, [selectedRecipe]);
 
   const handleFollow = async () => {
     console.log(selectedRecipe);

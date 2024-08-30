@@ -8,6 +8,7 @@ let userRoute = require("./routes/users");
 let recipeRoute = require("./routes/recipe");
 let collectionRoute = require("./routes/collections");
 let followRoute = require("./routes/follow");
+let adminRoute = require("./routes/admin");
 
 let User = require("./models/user");
 let Recipe = require("./models/recipe");
@@ -24,6 +25,7 @@ app.use(userRoute);
 app.use("/recipes", recipeRoute);
 app.use(followRoute);
 app.use("/collections", collectionRoute);
+app.use("/admin", adminRoute);
 
 User.hasMany(Recipe, { foreignKey: "userId", as: "recipes" });
 Recipe.belongsTo(User, { foreignKey: "userId", as: "user" });

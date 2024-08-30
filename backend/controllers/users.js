@@ -67,3 +67,69 @@ exports.loginUser = (req, res) => {
       res.status(500).json({ message: "Error during login" });
     });
 };
+
+exports.fetchAllUsers = async (req, res) => {
+  try {
+    // Fetch all users from the database
+    const users = await User.findAll({
+      attributes: ["id", "name", "email", "isAdmin"], // Include only necessary fields
+    });
+    res.status(200).json(users);
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    res.status(500).json({ message: "Failed to fetch users" });
+  }
+};
+
+exports.getAdminStatus = async (req, res) => {
+  try {
+    const userId = req.user.id; // Assuming the user ID is available in req.user from authentication middleware
+    const user = await User.findByPk(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.status(200).json({ isAdmin: user.isAdmin });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// controllers/userController.js
+
+// Fetch user's profile details
+exports.getUserProfile = async (req, res) => {
+  console.log(req.user);
+  try {
+    const user = await User.findByPk(req.user.id, {
+      attributes: ["id", "name", "email", "isAdmin"], // Include only necessary fields
+    });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching user profile" });
+  }
+};
+
+// Update user's profile details
+exports.updateUserProfile = async (req, res) => {
+  try {
+    const { name, email } = req.body; // Only allow name and email to be updated
+    const user = await User.findByPk(req.user.id);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Update user details
+    user.name = name || user.name;
+    user.email = email || user.email;
+
+    await user.save();
+
+    res.json({ message: "Profile updated successfully", user });
+  } catch (error) {
+    res.status(500).json({ message: "Error updating profile" });
+  }
+};

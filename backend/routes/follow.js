@@ -24,4 +24,15 @@ router.get(
   followController.getFollowStatus
 );
 
+router.get(
+  "/users/following",
+  authenticateUser.authenticate,
+  followController.getFollowingUsers
+);
+
+router.get(
+  "/users/:userId/recipes",
+  authenticateUser.authenticate,
+  followController.getUserRecipes
+);
 module.exports = router;

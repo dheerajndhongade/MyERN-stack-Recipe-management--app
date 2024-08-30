@@ -1,5 +1,6 @@
 const User = require("../models/user");
 const Follow = require("../models/follow");
+const Recipe = require("../models/recipe");
 
 exports.followUser = async (req, res) => {
   try {
@@ -60,5 +61,57 @@ exports.getFollowStatus = async (req, res) => {
     res.status(200).json({ isFollowing: !!following });
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+exports.getFollowingUsers = async (req, res) => {
+  try {
+    const userId = req.user.id; // Assuming the user ID is set by authentication middleware
+
+    // Fetch users that the current user is following
+    const user = await User.findByPk(userId, {
+      include: {
+        model: User,
+        as: "Following",
+        attributes: ["id", "name"], // Only fetch necessary attributes
+        through: { attributes: [] }, // Exclude join table attributes
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json(user.Following);
+  } catch (error) {
+    console.error("Error fetching following users:", error);
+    res.status(500).json({ error: "Failed to fetch following users" });
+  }
+};
+
+exports.getUserRecipes = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    // Find the user to ensure they exist (optional step)
+    const user = await User.findByPk(userId);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Fetch recipes by user ID
+    const recipes = await Recipe.findAll({
+      where: { userId },
+      include: {
+        model: User,
+        as: "user",
+        attributes: ["id", "name"], // Fetch the user's basic info
+      },
+    });
+
+    res.status(200).json(recipes);
+  } catch (error) {
+    console.error("Error fetching user recipes:", error);
+    res.status(500).json({ error: "Failed to fetch user recipes" });
   }
 };

@@ -1,0 +1,11 @@
+.profile-container {
+  text-align: center;
+}
+
+.profile-container .ant-avatar {
+  margin-bottom: 16px;
+}
+
+.profile-container h2 {
+  margin-bottom: 24px;
+}
