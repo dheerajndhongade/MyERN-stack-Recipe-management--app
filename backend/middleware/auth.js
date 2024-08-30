@@ -6,6 +6,7 @@ let jwtSecretKey = process.env.JWT_SECRET;
 
 exports.authenticate = async (req, res, next) => {
   let token = req.headers.authorization;
+  console.log("aaaaaaaaaaaaaaaaaaa");
   try {
     const decoded = jwt.verify(token, jwtSecretKey);
 

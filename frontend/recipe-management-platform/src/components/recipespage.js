@@ -30,6 +30,7 @@ const RecipesPage = () => {
   const [rating, setRating] = useState(0);
   const [review, setReview] = useState("");
   const [reviews, setReviews] = useState([]);
+  const [isFollowing, setIsFollowing] = useState(false);
 
   useEffect(() => {
     const fetchRecipes = async () => {
@@ -40,7 +41,7 @@ const RecipesPage = () => {
         }
         const data = await response.json();
         setRecipes(data);
-        setFilteredRecipes(data); // Set initial filtered recipes
+        setFilteredRecipes(data);
       } catch (error) {
         message.error(error.message);
       } finally {
@@ -52,7 +53,6 @@ const RecipesPage = () => {
   }, []);
 
   useEffect(() => {
-    // Apply filter based on search query
     const results = recipes.filter((recipe) =>
       recipe.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
@@ -66,7 +66,6 @@ const RecipesPage = () => {
   const handleFilter = (filters) => {
     const { cookingTime, servings } = filters;
 
-    // Apply filtering logic on frontend
     const filtered = recipes.filter((recipe) => {
       let matchesCookingTime = true;
       let matchesServings = true;
@@ -85,12 +84,6 @@ const RecipesPage = () => {
     setFilteredRecipes(filtered);
   };
 
-  const showAddToCollectionsModal = (recipe) => {
-    setSelectedRecipe(recipe);
-    fetchReviews(recipe.id); // Fetch reviews when expanding the card
-    setIsModalVisible(true);
-  };
-
   const fetchReviews = async (recipeId) => {
     try {
       const response = await fetchWithAuth(
@@ -106,31 +99,95 @@ const RecipesPage = () => {
     }
   };
 
-  const handleAddToCollection = async (collectionType) => {
+  const fetchFollowStatus = async (userId) => {
     try {
       const response = await fetchWithAuth(
-        `http://localhost:5000/collections/${collectionType}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ recipeId: selectedRecipe.id }),
-        }
+        `http://localhost:5000/users/${userId}/follow-status`
       );
-
       if (!response.ok) {
-        throw new Error(`Failed to add to ${collectionType} Collection`);
+        throw new Error("Failed to fetch follow status");
       }
-
-      message.success(`Recipe added to ${collectionType} Collection`);
-      setIsModalVisible(false);
+      const data = await response.json();
+      setIsFollowing(data.isFollowing);
     } catch (error) {
       message.error(error.message);
     }
   };
 
+  const handleFollow = async () => {
+    console.log(selectedRecipe);
+    try {
+      const response = await fetchWithAuth(
+        `http://localhost:5000/users/${selectedRecipe.userId}/follow`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to follow the user");
+      }
+      message.success("You are now following this user!");
+      setIsFollowing(true);
+    } catch (error) {
+      message.error(error.message);
+    }
+  };
+
+  const handleUnfollow = async () => {
+    try {
+      const response = await fetchWithAuth(
+        `http://localhost:5000/users/${selectedRecipe.userId}/unfollow`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+      if (!response.ok) {
+        throw new Error("Failed to unfollow the user");
+      }
+      message.success("You have unfollowed this user.");
+      setIsFollowing(false);
+    } catch (error) {
+      message.error(error.message);
+    }
+  };
+
+  const handleAddToCollection = async (collectionType) => {
+    if (selectedRecipe) {
+      try {
+        const response = await fetchWithAuth(
+          `http://localhost:5000/collections/${collectionType}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ recipeId: selectedRecipe.id }),
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`Failed to add to ${collectionType} Collection`);
+        }
+
+        message.success(`Recipe added to ${collectionType} Collection`);
+        setIsModalVisible(false);
+      } catch (error) {
+        message.error(error.message);
+      }
+    } else {
+      message.error("No recipe selected.");
+    }
+  };
+
   const handleCardClick = (recipe) => {
-    setSelectedRecipe(recipe);
-    setIsModalVisible(true); // Open a modal to show more details
+    if (recipe) {
+      setSelectedRecipe(recipe);
+      setIsModalVisible(true);
+      fetchReviews(recipe.id); // Fetch reviews when expanding the card
+    } else {
+      message.error("Recipe data is not available.");
+    }
   };
 
   const handleRatingChange = (value) => {
@@ -164,7 +221,7 @@ const RecipesPage = () => {
       message.success("Review submitted successfully");
       setRating(0);
       setReview("");
-      fetchReviews(selectedRecipe.id); // Refresh the reviews list
+      fetchReviews(selectedRecipe.id);
     } catch (error) {
       message.error(error.message);
     }
@@ -250,6 +307,15 @@ const RecipesPage = () => {
           <p>Cooking Time: {selectedRecipe.cookingTime} mins</p>
           <p>Servings: {selectedRecipe.servings}</p>
           <p>Description: {selectedRecipe.description}</p>
+
+          <Button
+            type="primary"
+            onClick={isFollowing ? handleUnfollow : handleFollow}
+            style={{ marginBottom: "10px" }}
+          >
+            {isFollowing ? "Unfollow User" : "Follow User"}
+          </Button>
+
           <Form onFinish={handleSubmitReview}>
             <Form.Item label="Rate this recipe">
               <Rate onChange={handleRatingChange} value={rating} />
@@ -263,7 +329,7 @@ const RecipesPage = () => {
               </Button>
             </Form.Item>
           </Form>
-          <h3>Reviews:</h3>
+
           <List
             itemLayout="horizontal"
             dataSource={reviews}
